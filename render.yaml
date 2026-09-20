@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: avaliador-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: MODEL_PATH
+        value: ml/models/model.joblib
