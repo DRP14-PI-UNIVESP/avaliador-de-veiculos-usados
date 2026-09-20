@@ -10,28 +10,28 @@ from app.schemas.vehicle import (
 
 # Percentuais de ajuste baseados em pesquisa de mercado automotivo
 COMFORT_ADJUSTMENTS: dict[str, tuple[str, float]] = {
-    "air_conditioning": ("Ar-condicionado", 3.0),
-    "electric_windows": ("Vidros elétricos", 2.0),
-    "electric_locks": ("Travas elétricas", 1.5),
-    "leather_seats": ("Bancos de couro", 4.0),
-    "electric_mirrors": ("Retrovisores elétricos", 1.0),
-    "multimedia_center": ("Central multimídia", 3.5),
-    "rear_camera": ("Câmera de ré", 2.0),
-    "parking_sensor": ("Sensor de estacionamento", 1.5),
+    "air_conditioning": ("Ar-condicionado", 2.0),
+    "electric_windows": ("Vidros elétricos", 1.0),
+    "electric_locks": ("Travas elétricas", 0.5),
+    "leather_seats": ("Bancos de couro", 2.0),
+    "electric_mirrors": ("Retrovisores elétricos", 0.5),
+    "multimedia_center": ("Central multimídia", 2.0),
+    "rear_camera": ("Câmera de ré", 1.0),
+    "parking_sensor": ("Sensor de estacionamento", 1.0),
 }
 
 SAFETY_ADJUSTMENTS: dict[str, tuple[str, float]] = {
-    "airbag": ("Airbag", 2.5),
-    "abs_brakes": ("Freios ABS", 2.0),
-    "alarm": ("Alarme", 1.0),
-    "armored": ("Blindagem", 25.0),
+    "airbag": ("Airbag", 1.5),
+    "abs_brakes": ("Freios ABS", 1.0),
+    "alarm": ("Alarme", 0.5),
+    "armored": ("Blindagem", 15.0),
 }
 
 CONDITION_ADJUSTMENTS: dict[VehicleCondition, float] = {
-    VehicleCondition.EXCELLENT: 5.0,
+    VehicleCondition.EXCELLENT: 3.0,
     VehicleCondition.GOOD: 0.0,
-    VehicleCondition.FAIR: -8.0,
-    VehicleCondition.POOR: -20.0,
+    VehicleCondition.FAIR: -5.0,
+    VehicleCondition.POOR: -12.0,
 }
 
 
@@ -77,32 +77,32 @@ def calculate_adjustments(
         adjustments.append(PriceAdjustment(
             category="Condição",
             item="Histórico de acidente",
-            percentage=-12.0,
-            value=round(base_price * -12.0 / 100, 2),
+            percentage=-7.0,
+            value=round(base_price * -7.0 / 100, 2),
         ))
 
     if condition.single_owner:
         adjustments.append(PriceAdjustment(
             category="Condição",
             item="Único dono",
-            percentage=3.0,
-            value=round(base_price * 3.0 / 100, 2),
+            percentage=2.0,
+            value=round(base_price * 2.0 / 100, 2),
         ))
 
     if condition.full_service_history:
         adjustments.append(PriceAdjustment(
             category="Condição",
             item="Revisões em dia",
-            percentage=4.0,
-            value=round(base_price * 4.0 / 100, 2),
+            percentage=2.0,
+            value=round(base_price * 2.0 / 100, 2),
         ))
 
     if condition.original_paint:
         adjustments.append(PriceAdjustment(
             category="Condição",
             item="Pintura original",
-            percentage=3.0,
-            value=round(base_price * 3.0 / 100, 2),
+            percentage=1.5,
+            value=round(base_price * 1.5 / 100, 2),
         ))
 
     total_pct = sum(a.percentage for a in adjustments)

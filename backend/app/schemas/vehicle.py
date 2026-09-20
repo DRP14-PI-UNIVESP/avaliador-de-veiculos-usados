@@ -7,6 +7,7 @@ class FuelType(str, Enum):
     GASOLINE = "gasoline"
     DIESEL = "diesel"
     ALCOHOL = "alcohol"
+    FLEX = "flex"
 
 
 class GearType(str, Enum):
