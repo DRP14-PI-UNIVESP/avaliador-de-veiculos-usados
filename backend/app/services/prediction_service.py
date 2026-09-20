@@ -28,6 +28,10 @@ class PredictionService:
         data = vehicle.model_dump()
         data["vehicle_age"] = datetime.now().year - data["year_model"]
 
+        # Flex não existe no dataset original; usa gasoline como base
+        if data.get("fuel") == "flex":
+            data["fuel"] = "gasoline"
+
         # Converte enums para string antes de encodar
         for col in categorical_columns:
             if col in data and col in encoders:

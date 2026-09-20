@@ -26,7 +26,11 @@ class VehicleService:
 
     def get_fuel_types(self) -> list[str]:
         df = self._load_data()
-        return sorted(df["fuel"].unique().tolist())
+        fuels = sorted(df["fuel"].unique().tolist())
+        if "flex" not in fuels:
+            fuels.append("flex")
+            fuels.sort()
+        return fuels
 
     def get_gear_types(self) -> list[str]:
         df = self._load_data()
