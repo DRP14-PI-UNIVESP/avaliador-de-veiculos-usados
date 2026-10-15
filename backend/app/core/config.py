@@ -10,7 +10,10 @@ class Settings(BaseSettings):
 
     MODEL_PATH: str = "ml/models/model.joblib"
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "https://avaliador-de-veiculos-usados.vercel.app",
+    ]
 
 
 settings = Settings()
