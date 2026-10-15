@@ -4,15 +4,40 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class FuelType(str, Enum):
-    GASOLINE = "gasoline"
-    DIESEL = "diesel"
-    ALCOHOL = "alcohol"
-    FLEX = "flex"
+    GASOLINA = "Gasolina"
+    DIESEL = "Diesel"
+    FLEX = "Flex"
+    ELETRICO = "Elétrico"
+    HIBRIDO = "Híbrido"
 
 
 class GearType(str, Enum):
-    MANUAL = "manual"
-    AUTOMATIC = "automatic"
+    MANUAL = "Manual"
+    AUTOMATICA = "Automática"
+    CVT = "CVT"
+
+
+class BodyType(str, Enum):
+    HATCHBACK = "Hatchback"
+    SEDA = "Sedã"
+    SUV = "Utilitário esportivo"
+    PICAPE = "Picape"
+    PERUA = "Perua/SW"
+    COUPE = "Cupê"
+    CONVERSIVEL = "Conversível"
+    VAN = "Van/Utilitário"
+
+
+class DriveType(str, Enum):
+    DIANTEIRA = "Dianteira"
+    TRASEIRA = "Traseira"
+    INTEGRAL_PARCIAL = "Integral parcial"
+    INTEGRAL_PERMANENTE = "Integral permanente"
+
+
+class SellerType(str, Enum):
+    PF = "PF"
+    PJ = "PJ"
 
 
 class VehicleCondition(str, Enum):
@@ -49,13 +74,20 @@ class ConditionFeatures(BaseModel):
 
 
 class VehicleInput(BaseModel):
-    brand: str = Field(..., json_schema_extra={"example": "fiat"})
-    model: str = Field(..., json_schema_extra={"example": "uno 1.0"})
-    year_model: int = Field(..., ge=1985, le=2026, json_schema_extra={"example": 2018})
+    brand: str = Field(..., json_schema_extra={"example": "TOYOTA"})
+    model: str = Field(..., json_schema_extra={"example": "COROLLA"})
+    year_model: int = Field(..., ge=1990, le=2026, json_schema_extra={"example": 2020})
+    year_manufacture: int = Field(..., ge=1990, le=2026, json_schema_extra={"example": 2019})
     mileage_km: float = Field(..., ge=0, json_schema_extra={"example": 45000})
-    fuel: FuelType = Field(..., json_schema_extra={"example": "gasoline"})
-    gear: GearType = Field(..., json_schema_extra={"example": "manual"})
-    engine_size: float = Field(..., gt=0, json_schema_extra={"example": 1.0})
+    fuel: str = Field(..., json_schema_extra={"example": "Flex"})
+    gear: str = Field(..., json_schema_extra={"example": "Automática"})
+    body_type: str = Field(..., json_schema_extra={"example": "Sedã"})
+    drive_type: str = Field(default="", json_schema_extra={"example": "Dianteira"})
+    seller_type: str = Field(default="PF", json_schema_extra={"example": "PF"})
+    city: str = Field(default="", json_schema_extra={"example": "São Paulo"})
+    neighborhood: str = Field(default="", json_schema_extra={"example": "Centro"})
+    horsepower: float = Field(default=0, ge=0, json_schema_extra={"example": 140})
+    engine_cc: float = Field(default=0, ge=0, json_schema_extra={"example": 2.0})
 
     comfort: ComfortFeatures = Field(default_factory=ComfortFeatures)
     safety: SafetyFeatures = Field(default_factory=SafetyFeatures)
@@ -75,6 +107,6 @@ class PredictionOutput(BaseModel):
     base_price: float = Field(..., json_schema_extra={"example": 89500.00})
     estimated_price: float = Field(..., json_schema_extra={"example": 95000.00})
     currency: str = "BRL"
-    model_used: str = Field(..., json_schema_extra={"example": "XGBRegressor"})
+    model_used: str = Field(..., json_schema_extra={"example": "HistGradientBoostingRegressor"})
     adjustments: list[PriceAdjustment] = []
     total_adjustment_percent: float = 0.0
