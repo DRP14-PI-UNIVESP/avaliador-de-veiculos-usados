@@ -70,32 +70,33 @@ const conditionOptions: Record<string, string> = {
   poor: "Ruim",
 };
 
-const fuelLabels: Record<string, string> = {
-  gasoline: "Gasolina",
-  diesel: "Diesel",
-  alcohol: "Etanol",
-};
-
-const gearLabels: Record<string, string> = {
-  manual: "Manual",
-  automatic: "Automático",
-};
-
 const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
   const [brands, setBrands] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [fuels, setFuels] = useState<string[]>([]);
   const [gears, setGears] = useState<string[]>([]);
-  const [yearRange, setYearRange] = useState({ min: 1985, max: 2023 });
+  const [bodyTypes, setBodyTypes] = useState<string[]>([]);
+  const [driveTypes, setDriveTypes] = useState<string[]>([]);
+  const [sellerTypes, setSellerTypes] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
+  const [yearRange, setYearRange] = useState({ min: 1996, max: 2026 });
 
   const [form, setForm] = useState({
     brand: "",
     model: "",
     year_model: 2020,
+    year_manufacture: 2019,
     mileage_km: 0,
     fuel: "",
     gear: "",
-    engine_size: 1.0,
+    body_type: "",
+    drive_type: "",
+    seller_type: "PF",
+    city: "",
+    neighborhood: "",
+    horsepower: 0,
+    engine_cc: 0,
   });
 
   const [comfort, setComfort] = useState<ComfortFeatures>({ ...defaultComfort });
@@ -107,11 +108,19 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
       vehicleService.getBrands(),
       vehicleService.getFuels(),
       vehicleService.getGears(),
+      vehicleService.getBodyTypes(),
+      vehicleService.getDriveTypes(),
+      vehicleService.getSellerTypes(),
+      vehicleService.getCities(),
       vehicleService.getYears(),
-    ]).then(([brandsData, fuelsData, gearsData, yearsData]) => {
+    ]).then(([brandsData, fuelsData, gearsData, bodyData, driveData, sellerData, citiesData, yearsData]) => {
       setBrands(brandsData);
       setFuels(fuelsData);
       setGears(gearsData);
+      setBodyTypes(bodyData);
+      setDriveTypes(driveData);
+      setSellerTypes(sellerData);
+      setCities(citiesData);
       setYearRange(yearsData);
     });
   }, []);
@@ -123,16 +132,21 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
     }
   }, [form.brand]);
 
+  useEffect(() => {
+    if (form.city) {
+      vehicleService.getNeighborhoodsByCity(form.city).then(setNeighborhoods);
+      setForm((prev) => ({ ...prev, neighborhood: "" }));
+    }
+  }, [form.city]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    const numericFields = ["year_model", "year_manufacture", "mileage_km", "horsepower", "engine_cc"];
     setForm((prev) => ({
       ...prev,
-      [name]:
-        name === "year_model" || name === "mileage_km" || name === "engine_size"
-          ? Number(value)
-          : value,
+      [name]: numericFields.includes(name) ? Number(value) : value,
     }));
   };
 
@@ -142,7 +156,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
   };
 
   const isValid =
-    form.brand && form.model && form.fuel && form.gear && form.engine_size > 0;
+    form.brand && form.model && form.fuel && form.gear && form.body_type;
 
   return (
     <>
@@ -155,7 +169,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
               <option value="">Selecione...</option>
               {brands.map((b) => (
                 <option key={b} value={b}>
-                  {b.toUpperCase()}
+                  {b}
                 </option>
               ))}
             </select>
@@ -191,6 +205,18 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
+            <label>Ano de Fabricação</label>
+            <input
+              type="number"
+              name="year_manufacture"
+              value={form.year_manufacture}
+              onChange={handleChange}
+              min={yearRange.min}
+              max={2026}
+            />
+          </div>
+
+          <div className="form-group">
             <label>Quilometragem (km)</label>
             <input
               type="number"
@@ -208,7 +234,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
               <option value="">Selecione...</option>
               {fuels.map((f) => (
                 <option key={f} value={f}>
-                  {fuelLabels[f] || f}
+                  {f}
                 </option>
               ))}
             </select>
@@ -220,22 +246,100 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
               <option value="">Selecione...</option>
               {gears.map((g) => (
                 <option key={g} value={g}>
-                  {gearLabels[g] || g}
+                  {g}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label>Motor (litros)</label>
+            <label>Carroceria</label>
+            <select name="body_type" value={form.body_type} onChange={handleChange}>
+              <option value="">Selecione...</option>
+              {bodyTypes.map((bt) => (
+                <option key={bt} value={bt}>
+                  {bt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Tração</label>
+            <select name="drive_type" value={form.drive_type} onChange={handleChange}>
+              <option value="">Não informado</option>
+              {driveTypes.map((dt) => (
+                <option key={dt} value={dt}>
+                  {dt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Tipo de Vendedor</label>
+            <select name="seller_type" value={form.seller_type} onChange={handleChange}>
+              {sellerTypes.map((st) => (
+                <option key={st} value={st}>
+                  {st === "PF" ? "Pessoa Física" : "Pessoa Jurídica"}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Cidade</label>
+            <select name="city" value={form.city} onChange={handleChange}>
+              <option value="">Não informado</option>
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Bairro</label>
+            <select
+              name="neighborhood"
+              value={form.neighborhood}
+              onChange={handleChange}
+              disabled={!form.city}
+            >
+              <option value="">Não informado</option>
+              {neighborhoods.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Potência (cv)</label>
             <input
               type="number"
-              name="engine_size"
-              value={form.engine_size}
+              name="horsepower"
+              value={form.horsepower}
               onChange={handleChange}
-              min={0.5}
-              max={7.0}
+              min={0}
+              step={1}
+              placeholder="Ex: 140"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Cilindrada (litros)</label>
+            <input
+              type="number"
+              name="engine_cc"
+              value={form.engine_cc}
+              onChange={handleChange}
+              min={0}
+              max={7}
               step={0.1}
+              placeholder="Ex: 2.0"
             />
           </div>
         </form>
