@@ -1,10 +1,18 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.services.vehicle_service import VehicleService
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 
 vehicle_service = VehicleService()
+
+
+@router.get("/options")
+async def filtered_options(
+    brand: str = Query("", description="Filtrar por marca"),
+    model: str = Query("", description="Filtrar por modelo"),
+) -> dict:
+    return vehicle_service.get_filtered_options(brand, model)
 
 
 @router.get("/brands")

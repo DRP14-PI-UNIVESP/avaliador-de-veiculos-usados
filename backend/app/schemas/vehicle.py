@@ -69,7 +69,10 @@ class ConditionFeatures(BaseModel):
     accident_history: bool = False
     single_owner: bool = False
     full_service_history: bool = False
+    dealer_service_history: bool = False
     original_paint: bool = False
+    ipva_paid: bool = False
+    factory_warranty: bool = False
     condition: VehicleCondition = VehicleCondition.GOOD
 
 
@@ -77,7 +80,7 @@ class VehicleInput(BaseModel):
     brand: str = Field(..., json_schema_extra={"example": "TOYOTA"})
     model: str = Field(..., json_schema_extra={"example": "COROLLA"})
     year_model: int = Field(..., ge=1990, le=2026, json_schema_extra={"example": 2020})
-    year_manufacture: int = Field(..., ge=1990, le=2026, json_schema_extra={"example": 2019})
+    year_manufacture: int | None = Field(default=None, ge=1990, le=2026, json_schema_extra={"example": 2019})
     mileage_km: float = Field(..., ge=0, json_schema_extra={"example": 45000})
     fuel: str = Field(..., json_schema_extra={"example": "Flex"})
     gear: str = Field(..., json_schema_extra={"example": "Automática"})

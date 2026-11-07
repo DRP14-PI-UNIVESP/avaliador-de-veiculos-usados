@@ -22,6 +22,9 @@ body {
   padding: 1.5rem 2rem;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header h1 {
@@ -79,6 +82,13 @@ body {
   letter-spacing: 0.5px;
 }
 
+.label-tooltip {
+  cursor: help;
+  border-bottom: 1px dotted #999;
+  display: inline-block;
+  width: fit-content;
+}
+
 .form-group select,
 .form-group input {
   padding: 0.7rem 0.9rem;
@@ -120,6 +130,24 @@ body {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.btn-clear {
+  padding: 0.5rem 1.2rem;
+  background: transparent;
+  color: #999;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear:hover {
+  color: #c62828;
+  border-color: #c62828;
+  background: #ffebee;
 }
 
 .result-card {
