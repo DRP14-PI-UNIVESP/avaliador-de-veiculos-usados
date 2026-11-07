@@ -28,6 +28,7 @@ class PredictionService:
         feature_order = artifact["ordem_features"]
 
         current_year = datetime.now().year
+        year_manufacture = vehicle.year_manufacture if vehicle.year_manufacture is not None else vehicle.year_model
         idade_veiculo = current_year - vehicle.year_model
 
         # Montar dicionário com os dados do veículo
@@ -41,7 +42,7 @@ class PredictionService:
             "cidade": vehicle.city or "__AUSENTE__",
             "bairro": vehicle.neighborhood or "__AUSENTE__",
             "tracao": vehicle.drive_type or "__AUSENTE__",
-            "ano_fabricacao": float(vehicle.year_manufacture),
+            "ano_fabricacao": float(year_manufacture),
             "ano_modelo": float(vehicle.year_model),
             "idade_veiculo": float(idade_veiculo),
             "quilometragem": float(vehicle.mileage_km),

@@ -34,7 +34,10 @@ const defaultCondition: ConditionFeatures = {
   accident_history: false,
   single_owner: false,
   full_service_history: false,
+  dealer_service_history: false,
   original_paint: false,
+  ipva_paid: false,
+  factory_warranty: false,
   condition: "good",
 };
 
@@ -59,8 +62,11 @@ const safetyLabels: Record<string, string> = {
 const conditionCheckLabels: Record<string, string> = {
   accident_history: "Já foi batido",
   single_owner: "Único dono",
-  full_service_history: "Revisões em dia",
+  full_service_history: "Revisões pela agenda do carro",
+  dealer_service_history: "Revisões pela concessionária",
   original_paint: "Pintura original",
+  ipva_paid: "IPVA pago",
+  factory_warranty: "Garantia de fábrica",
 };
 
 const conditionOptions: Record<string, string> = {
@@ -68,6 +74,52 @@ const conditionOptions: Record<string, string> = {
   good: "Bom",
   fair: "Regular",
   poor: "Ruim",
+};
+
+const fieldTooltips: Record<string, string> = {
+  brand: "Fabricante do veículo. Os demais campos serão filtrados com base na marca selecionada.",
+  model: "Modelo específico do veículo. Selecione a marca primeiro.",
+  year_model: "Ano de referência do modelo (pode ser diferente do ano de fabricação).",
+  year_manufacture: "Ano em que o veículo foi fabricado. Opcional — se não informado, será usado o ano do modelo.",
+  mileage_km: "Total de quilômetros rodados pelo veículo.",
+  fuel: "Tipo de combustível utilizado pelo veículo.",
+  gear: "Tipo de transmissão: manual, automática ou CVT.",
+  body_type: "Formato da carroceria do veículo.",
+  drive_type: "Sistema de tração do veículo. Opcional.",
+  seller_type: "Pessoa Física (particular) ou Pessoa Jurídica (loja/revenda).",
+  city: "Cidade onde o veículo está sendo vendido. Opcional.",
+  neighborhood: "Bairro onde o veículo está sendo vendido. Selecione a cidade primeiro.",
+  horsepower: "Potência do motor em cavalos. Opcional — se não informado, será usado o valor médio da base.",
+  engine_cc: "Cilindrada do motor em litros (ex: 1.0, 2.0). Opcional — se não informado, será usado o valor médio da base.",
+};
+
+const comfortTooltips: Record<string, string> = {
+  air_conditioning: "Veículo possui ar-condicionado.",
+  electric_windows: "Vidros com acionamento elétrico.",
+  electric_locks: "Travas das portas com acionamento elétrico.",
+  leather_seats: "Bancos revestidos em couro.",
+  electric_mirrors: "Retrovisores com ajuste elétrico.",
+  multimedia_center: "Central multimídia com tela (rádio, GPS, etc.).",
+  rear_camera: "Câmera para auxiliar manobras de ré.",
+  parking_sensor: "Sensores que alertam sobre obstáculos ao estacionar.",
+};
+
+const safetyTooltips: Record<string, string> = {
+  airbag: "Bolsas infláveis de proteção em caso de colisão.",
+  abs_brakes: "Sistema de freios antitravamento.",
+  alarm: "Sistema de alarme antifurto.",
+  armored: "Veículo com blindagem balística. Impacto significativo no preço.",
+};
+
+const conditionTooltips: Record<string, string> = {
+  accident_history: "Marque se o veículo já sofreu alguma colisão. Reduz o valor estimado.",
+  single_owner: "Veículo teve apenas um proprietário desde zero.",
+  full_service_history: "Todas as revisões foram feitas conforme a agenda do fabricante.",
+  dealer_service_history: "Todas as revisões foram realizadas em concessionária autorizada.",
+  original_paint: "A pintura do veículo é a original de fábrica, sem retoques.",
+  ipva_paid: "IPVA do ano vigente está quitado.",
+  factory_warranty: "O veículo ainda está coberto pela garantia de fábrica.",
+  condition_select: "Avaliação geral do estado de conservação do veículo.",
 };
 
 const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
@@ -86,7 +138,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
     brand: "",
     model: "",
     year_model: 2020,
-    year_manufacture: 2019,
+    year_manufacture: "" as number | "",
     mileage_km: 0,
     fuel: "",
     gear: "",
@@ -103,34 +155,51 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
   const [safety, setSafety] = useState<SafetyFeatures>({ ...defaultSafety });
   const [condition, setCondition] = useState<ConditionFeatures>({ ...defaultCondition });
 
+  // Carrega marcas e faixa de anos (fixos, sem filtro)
   useEffect(() => {
     Promise.all([
       vehicleService.getBrands(),
-      vehicleService.getFuels(),
-      vehicleService.getGears(),
-      vehicleService.getBodyTypes(),
-      vehicleService.getDriveTypes(),
-      vehicleService.getSellerTypes(),
-      vehicleService.getCities(),
       vehicleService.getYears(),
-    ]).then(([brandsData, fuelsData, gearsData, bodyData, driveData, sellerData, citiesData, yearsData]) => {
+    ]).then(([brandsData, yearsData]) => {
       setBrands(brandsData);
-      setFuels(fuelsData);
-      setGears(gearsData);
-      setBodyTypes(bodyData);
-      setDriveTypes(driveData);
-      setSellerTypes(sellerData);
-      setCities(citiesData);
       setYearRange(yearsData);
     });
   }, []);
 
+  // Quando marca ou modelo muda, busca opções filtradas
   useEffect(() => {
-    if (form.brand) {
-      vehicleService.getModelsByBrand(form.brand).then(setModels);
-      setForm((prev) => ({ ...prev, model: "" }));
-    }
-  }, [form.brand]);
+    vehicleService.getFilteredOptions(form.brand, form.model).then((opts) => {
+      setModels(opts.models);
+      setFuels(opts.fuels);
+      setGears(opts.gears);
+      setBodyTypes(opts.body_types);
+      setDriveTypes(opts.drive_types);
+      setSellerTypes(opts.seller_types);
+      setCities(opts.cities);
+      setYearRange({ min: opts.year_min, max: opts.year_max });
+
+      // Limpa seleções que não existem mais nas opções filtradas
+      setForm((prev) => {
+        const clampedYearModel = Math.max(opts.year_min, Math.min(opts.year_max, prev.year_model));
+        const clampedYearMfg = prev.year_manufacture === ""
+          ? ""
+          : Math.max(opts.year_min, Math.min(opts.year_max, prev.year_manufacture));
+        return {
+          ...prev,
+          model: form.brand ? (opts.models.includes(prev.model) ? prev.model : "") : prev.model,
+          fuel: opts.fuels.includes(prev.fuel) ? prev.fuel : "",
+          gear: opts.gears.includes(prev.gear) ? prev.gear : "",
+          body_type: opts.body_types.includes(prev.body_type) ? prev.body_type : "",
+          drive_type: opts.drive_types.includes(prev.drive_type) ? prev.drive_type : "",
+          seller_type: opts.seller_types.includes(prev.seller_type) ? prev.seller_type : (opts.seller_types[0] || "PF"),
+          city: opts.cities.includes(prev.city) ? prev.city : "",
+          neighborhood: "",
+          year_model: clampedYearModel,
+          year_manufacture: clampedYearMfg,
+        };
+      });
+    });
+  }, [form.brand, form.model]);
 
   useEffect(() => {
     if (form.city) {
@@ -144,15 +213,51 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
   ) => {
     const { name, value } = e.target;
     const numericFields = ["year_model", "year_manufacture", "mileage_km", "horsepower", "engine_cc"];
-    setForm((prev) => ({
-      ...prev,
-      [name]: numericFields.includes(name) ? Number(value) : value,
-    }));
+    if (name === "year_manufacture") {
+      setForm((prev) => ({
+        ...prev,
+        year_manufacture: value === "" ? "" : Number(value),
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: numericFields.includes(name) ? Number(value) : value,
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ ...form, comfort, safety, condition });
+    const payload = {
+      ...form,
+      year_manufacture: form.year_manufacture === "" ? null : form.year_manufacture,
+      comfort,
+      safety,
+      condition,
+    };
+    onSubmit(payload as any);
+  };
+
+  const handleClear = () => {
+    setForm({
+      brand: "",
+      model: "",
+      year_model: 2020,
+      year_manufacture: "" as number | "",
+      mileage_km: 0,
+      fuel: "",
+      gear: "",
+      body_type: "",
+      drive_type: "",
+      seller_type: "PF",
+      city: "",
+      neighborhood: "",
+      horsepower: 0,
+      engine_cc: 0,
+    });
+    setComfort({ ...defaultComfort });
+    setSafety({ ...defaultSafety });
+    setCondition({ ...defaultCondition });
   };
 
   const isValid =
@@ -161,10 +266,19 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
   return (
     <>
       <div className="card">
-        <h2>Dados do Veículo</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2>Dados do Veículo</h2>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="btn-clear"
+          >
+            Limpar
+          </button>
+        </div>
         <form onSubmit={handleSubmit} id="vehicle-form" className="form-grid">
           <div className="form-group">
-            <label>Marca</label>
+            <label title={fieldTooltips.brand} className="label-tooltip">Marca</label>
             <select name="brand" value={form.brand} onChange={handleChange}>
               <option value="">Selecione...</option>
               {brands.map((b) => (
@@ -176,7 +290,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Modelo</label>
+            <label title={fieldTooltips.model} className="label-tooltip">Modelo</label>
             <select
               name="model"
               value={form.model}
@@ -193,7 +307,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Ano do Modelo</label>
+            <label title={fieldTooltips.year_model} className="label-tooltip">Ano do Modelo</label>
             <input
               type="number"
               name="year_model"
@@ -205,7 +319,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Ano de Fabricação</label>
+            <label title={fieldTooltips.year_manufacture} className="label-tooltip">Ano de Fabricação</label>
             <input
               type="number"
               name="year_manufacture"
@@ -213,11 +327,12 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
               onChange={handleChange}
               min={yearRange.min}
               max={2026}
+              placeholder="Igual ao ano do modelo"
             />
           </div>
 
           <div className="form-group">
-            <label>Quilometragem (km)</label>
+            <label title={fieldTooltips.mileage_km} className="label-tooltip">Quilometragem (km)</label>
             <input
               type="number"
               name="mileage_km"
@@ -229,7 +344,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Combustível</label>
+            <label title={fieldTooltips.fuel} className="label-tooltip">Combustível</label>
             <select name="fuel" value={form.fuel} onChange={handleChange}>
               <option value="">Selecione...</option>
               {fuels.map((f) => (
@@ -241,7 +356,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Câmbio</label>
+            <label title={fieldTooltips.gear} className="label-tooltip">Câmbio</label>
             <select name="gear" value={form.gear} onChange={handleChange}>
               <option value="">Selecione...</option>
               {gears.map((g) => (
@@ -253,7 +368,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Carroceria</label>
+            <label title={fieldTooltips.body_type} className="label-tooltip">Carroceria</label>
             <select name="body_type" value={form.body_type} onChange={handleChange}>
               <option value="">Selecione...</option>
               {bodyTypes.map((bt) => (
@@ -265,7 +380,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Tração</label>
+            <label title={fieldTooltips.drive_type} className="label-tooltip">Tração</label>
             <select name="drive_type" value={form.drive_type} onChange={handleChange}>
               <option value="">Não informado</option>
               {driveTypes.map((dt) => (
@@ -277,7 +392,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Tipo de Vendedor</label>
+            <label title={fieldTooltips.seller_type} className="label-tooltip">Tipo de Vendedor</label>
             <select name="seller_type" value={form.seller_type} onChange={handleChange}>
               {sellerTypes.map((st) => (
                 <option key={st} value={st}>
@@ -288,7 +403,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Cidade</label>
+            <label title={fieldTooltips.city} className="label-tooltip">Cidade</label>
             <select name="city" value={form.city} onChange={handleChange}>
               <option value="">Não informado</option>
               {cities.map((c) => (
@@ -300,7 +415,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Bairro</label>
+            <label title={fieldTooltips.neighborhood} className="label-tooltip">Bairro</label>
             <select
               name="neighborhood"
               value={form.neighborhood}
@@ -317,7 +432,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Potência (cv)</label>
+            <label title={fieldTooltips.horsepower} className="label-tooltip">Potência (cv)</label>
             <input
               type="number"
               name="horsepower"
@@ -330,7 +445,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
 
           <div className="form-group">
-            <label>Cilindrada (litros)</label>
+            <label title={fieldTooltips.engine_cc} className="label-tooltip">Cilindrada (litros)</label>
             <input
               type="number"
               name="engine_cc"
@@ -349,7 +464,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
         <h2>Conforto</h2>
         <div className="checkbox-grid">
           {Object.entries(comfortLabels).map(([key, label]) => (
-            <label key={key} className="checkbox-item">
+            <label key={key} className="checkbox-item" title={comfortTooltips[key]}>
               <input
                 type="checkbox"
                 checked={comfort[key as keyof ComfortFeatures]}
@@ -367,7 +482,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
         <h2>Segurança</h2>
         <div className="checkbox-grid">
           {Object.entries(safetyLabels).map(([key, label]) => (
-            <label key={key} className="checkbox-item">
+            <label key={key} className="checkbox-item" title={safetyTooltips[key]}>
               <input
                 type="checkbox"
                 checked={safety[key as keyof SafetyFeatures]}
@@ -385,7 +500,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
         <h2>Condição do Veículo</h2>
         <div className="form-grid">
           <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-            <label>Estado Geral</label>
+            <label title={conditionTooltips.condition_select} className="label-tooltip">Estado Geral</label>
             <select
               value={condition.condition}
               onChange={(e) =>
@@ -402,7 +517,7 @@ const VehicleForm: React.FC<Props> = ({ onSubmit, loading }) => {
         </div>
         <div className="checkbox-grid" style={{ marginTop: "1rem" }}>
           {Object.entries(conditionCheckLabels).map(([key, label]) => (
-            <label key={key} className="checkbox-item">
+            <label key={key} className="checkbox-item" title={conditionTooltips[key]}>
               <input
                 type="checkbox"
                 checked={condition[key as keyof ConditionFeatures] as boolean}

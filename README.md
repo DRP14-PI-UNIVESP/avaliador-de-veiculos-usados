@@ -4,7 +4,7 @@ Estimativa de preço de mercado para veículos usados com machine learning — P
 
 ## Sobre
 
-Sistema que utiliza técnicas de aprendizagem de máquina (regressão supervisionada) para estimar o valor de mercado de veículos usados a partir de seus atributos: marca, modelo, ano, quilometragem, motorização, câmbio e combustível.
+Sistema que utiliza técnicas de aprendizagem de máquina (regressão supervisionada) para estimar o valor de mercado de veículos usados a partir de seus atributos: marca, modelo, ano, quilometragem, combustível, câmbio e carroceria, além de itens de conforto, segurança e condição do veículo.
 
 ## Arquitetura
 
@@ -33,10 +33,10 @@ Sistema que utiliza técnicas de aprendizagem de máquina (regressão supervisio
 |--------------|-------------------------------------|
 | Frontend     | React                               |
 | Backend/API  | FastAPI (Python)                    |
-| ML           | scikit-learn, XGBoost, LightGBM     |
-| Métricas     | MAE, RMSE, R²                       |
+| ML           | scikit-learn (Random Forest, Extra Trees, Hist Gradient Boosting) |
+| Métricas     | MAE, RMSE, R², MAPE                 |
 | Container    | Docker / Docker Compose             |
-| Dataset      | Kaggle (FIPE - preços médios Brasil) |
+| Dataset      | Webmotors (anúncios) e Tabela FIPE (referência) |
 
 ## Como executar
 

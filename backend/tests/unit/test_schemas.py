@@ -7,61 +7,67 @@ from app.schemas.vehicle import FuelType, GearType, VehicleInput
 class TestVehicleInput:
     def test_valid_input(self):
         vehicle = VehicleInput(
-            brand="fiat",
-            model="uno 1.0",
-            year_model=2018,
-            mileage_km=50000,
-            fuel=FuelType.GASOLINE,
-            gear=GearType.MANUAL,
-            engine_size=1.0,
+            brand="TOYOTA",
+            model="COROLLA",
+            year_model=2020,
+            year_manufacture=2019,
+            mileage_km=45000,
+            fuel=FuelType.FLEX,
+            gear=GearType.AUTOMATICA,
+            body_type="Sedã",
         )
-        assert vehicle.brand == "fiat"
-        assert vehicle.year_model == 2018
+        assert vehicle.brand == "TOYOTA"
+        assert vehicle.year_model == 2020
 
     def test_invalid_year_too_low(self):
         with pytest.raises(ValidationError):
             VehicleInput(
-                brand="fiat",
-                model="uno",
+                brand="TOYOTA",
+                model="COROLLA",
                 year_model=1900,
-                mileage_km=50000,
-                fuel=FuelType.GASOLINE,
-                gear=GearType.MANUAL,
-                engine_size=1.0,
+                year_manufacture=1900,
+                mileage_km=45000,
+                fuel=FuelType.FLEX,
+                gear=GearType.AUTOMATICA,
+                body_type="Sedã",
             )
 
     def test_invalid_negative_mileage(self):
         with pytest.raises(ValidationError):
             VehicleInput(
-                brand="fiat",
-                model="uno",
+                brand="TOYOTA",
+                model="COROLLA",
                 year_model=2020,
+                year_manufacture=2019,
                 mileage_km=-1000,
-                fuel=FuelType.GASOLINE,
-                gear=GearType.MANUAL,
-                engine_size=1.0,
+                fuel=FuelType.FLEX,
+                gear=GearType.AUTOMATICA,
+                body_type="Sedã",
             )
 
-    def test_invalid_fuel_type(self):
+    def test_invalid_year_too_high(self):
         with pytest.raises(ValidationError):
             VehicleInput(
-                brand="fiat",
-                model="uno",
-                year_model=2020,
-                mileage_km=50000,
-                fuel="flex",
-                gear=GearType.MANUAL,
-                engine_size=1.0,
+                brand="TOYOTA",
+                model="COROLLA",
+                year_model=2050,
+                year_manufacture=2050,
+                mileage_km=45000,
+                fuel=FuelType.FLEX,
+                gear=GearType.AUTOMATICA,
+                body_type="Sedã",
             )
 
-    def test_invalid_engine_size_zero(self):
+    def test_invalid_engine_cc_negative(self):
         with pytest.raises(ValidationError):
             VehicleInput(
-                brand="fiat",
-                model="uno",
+                brand="TOYOTA",
+                model="COROLLA",
                 year_model=2020,
-                mileage_km=50000,
-                fuel=FuelType.GASOLINE,
-                gear=GearType.MANUAL,
-                engine_size=0,
+                year_manufacture=2019,
+                mileage_km=45000,
+                fuel=FuelType.FLEX,
+                gear=GearType.AUTOMATICA,
+                body_type="Sedã",
+                engine_cc=-1.0,
             )
