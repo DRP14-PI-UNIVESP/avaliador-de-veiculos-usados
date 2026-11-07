@@ -25,14 +25,14 @@ class TestVehiclesEndpoints:
         response = client.get("/api/v1/vehicles/fuels")
         assert response.status_code == 200
         fuels = response.json()
-        assert "gasoline" in fuels
+        assert "Gasolina" in fuels
 
     def test_list_gears(self):
         response = client.get("/api/v1/vehicles/gears")
         assert response.status_code == 200
         gears = response.json()
-        assert "manual" in gears
-        assert "automatic" in gears
+        assert "Manual" in gears
+        assert "Automática" in gears
 
     def test_year_range(self):
         response = client.get("/api/v1/vehicles/years")
@@ -43,7 +43,7 @@ class TestVehiclesEndpoints:
         assert data["min"] < data["max"]
 
     def test_models_by_brand(self):
-        response = client.get("/api/v1/vehicles/brands/fiat/models")
+        response = client.get("/api/v1/vehicles/brands/TOYOTA/models")
         assert response.status_code == 200
         models = response.json()
         assert isinstance(models, list)
@@ -55,13 +55,14 @@ class TestPredictionEndpoint:
         response = client.post(
             "/api/v1/predict",
             json={
-                "brand": "fiat",
-                "model": "uno 1.0",
-                "year_model": 2018,
-                "mileage_km": 50000,
-                "fuel": "gasoline",
-                "gear": "manual",
-                "engine_size": 1.0,
+                "brand": "TOYOTA",
+                "model": "COROLLA",
+                "year_model": 2020,
+                "year_manufacture": 2019,
+                "mileage_km": 45000,
+                "fuel": "Flex",
+                "gear": "Automática",
+                "body_type": "Sedã",
             },
         )
         assert response.status_code == 200
@@ -76,13 +77,14 @@ class TestPredictionEndpoint:
         response = client.post(
             "/api/v1/predict",
             json={
-                "brand": "fiat",
-                "model": "uno 1.0",
-                "year_model": 2018,
-                "mileage_km": 50000,
-                "fuel": "gasoline",
-                "gear": "manual",
-                "engine_size": 1.0,
+                "brand": "TOYOTA",
+                "model": "COROLLA",
+                "year_model": 2020,
+                "year_manufacture": 2019,
+                "mileage_km": 45000,
+                "fuel": "Flex",
+                "gear": "Automática",
+                "body_type": "Sedã",
                 "comfort": {
                     "air_conditioning": True,
                     "electric_windows": True,
@@ -113,13 +115,14 @@ class TestPredictionEndpoint:
         response = client.post(
             "/api/v1/predict",
             json={
-                "brand": "fiat",
-                "model": "uno 1.0",
-                "year_model": 2018,
-                "mileage_km": 50000,
-                "fuel": "gasoline",
-                "gear": "manual",
-                "engine_size": 1.0,
+                "brand": "TOYOTA",
+                "model": "COROLLA",
+                "year_model": 2020,
+                "year_manufacture": 2019,
+                "mileage_km": 45000,
+                "fuel": "Flex",
+                "gear": "Automática",
+                "body_type": "Sedã",
                 "condition": {
                     "accident_history": True,
                     "single_owner": False,
@@ -134,17 +137,18 @@ class TestPredictionEndpoint:
         assert data["estimated_price"] < data["base_price"]
         assert data["total_adjustment_percent"] < 0
 
-    def test_predict_invalid_fuel(self):
+    def test_predict_invalid_year(self):
         response = client.post(
             "/api/v1/predict",
             json={
-                "brand": "fiat",
-                "model": "uno",
-                "year_model": 2018,
-                "mileage_km": 50000,
-                "fuel": "flex",
-                "gear": "manual",
-                "engine_size": 1.0,
+                "brand": "TOYOTA",
+                "model": "COROLLA",
+                "year_model": 1800,
+                "year_manufacture": 1800,
+                "mileage_km": 45000,
+                "fuel": "Flex",
+                "gear": "Manual",
+                "body_type": "Sedã",
             },
         )
         assert response.status_code == 422
@@ -152,6 +156,6 @@ class TestPredictionEndpoint:
     def test_predict_missing_fields(self):
         response = client.post(
             "/api/v1/predict",
-            json={"brand": "fiat"},
+            json={"brand": "TOYOTA"},
         )
         assert response.status_code == 422

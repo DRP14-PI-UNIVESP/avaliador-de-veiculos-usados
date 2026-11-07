@@ -26,7 +26,10 @@ export interface ConditionFeatures {
   accident_history: boolean;
   single_owner: boolean;
   full_service_history: boolean;
+  dealer_service_history: boolean;
   original_paint: boolean;
+  ipva_paid: boolean;
+  factory_warranty: boolean;
   condition: string;
 }
 
@@ -55,6 +58,18 @@ export interface PriceAdjustment {
   item: string;
   percentage: number;
   value: number;
+}
+
+export interface FilteredOptions {
+  models: string[];
+  fuels: string[];
+  gears: string[];
+  body_types: string[];
+  drive_types: string[];
+  seller_types: string[];
+  cities: string[];
+  year_min: number;
+  year_max: number;
 }
 
 export interface PredictionOutput {
@@ -94,6 +109,11 @@ export const vehicleService = {
 
   getYears: () =>
     api.get<{ min: number; max: number }>("/vehicles/years").then((r) => r.data),
+
+  getFilteredOptions: (brand: string, model: string) =>
+    api
+      .get<FilteredOptions>("/vehicles/options", { params: { brand, model } })
+      .then((r) => r.data),
 
   predict: (data: VehicleInput) =>
     api.post<PredictionOutput>("/predict", data).then((r) => r.data),

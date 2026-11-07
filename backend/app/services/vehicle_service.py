@@ -59,3 +59,23 @@ class VehicleService:
             "min": int(df["ano_modelo"].min()),
             "max": int(df["ano_modelo"].max()),
         }
+
+    def get_filtered_options(self, brand: str = "", model: str = "") -> dict:
+        df = self._load_data()
+        filtered = df
+        if brand:
+            filtered = filtered[filtered["nome_marca"] == brand.strip()]
+        if model:
+            filtered = filtered[filtered["nome_modelo"] == model.strip()]
+
+        return {
+            "models": sorted(filtered["nome_modelo"].dropna().unique().tolist()),
+            "fuels": sorted(filtered["nome_combustivel"].dropna().unique().tolist()),
+            "gears": sorted(filtered["cambio"].dropna().unique().tolist()),
+            "body_types": sorted(filtered["carroceria"].dropna().unique().tolist()),
+            "drive_types": sorted(filtered["tracao"].dropna().unique().tolist()),
+            "seller_types": sorted(filtered["tipo_vendedor"].dropna().unique().tolist()),
+            "cities": sorted(filtered["cidade"].dropna().unique().tolist()),
+            "year_min": int(filtered["ano_modelo"].min()),
+            "year_max": int(filtered["ano_modelo"].max()),
+        }

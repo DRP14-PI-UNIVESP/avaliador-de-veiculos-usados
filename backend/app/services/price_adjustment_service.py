@@ -92,9 +92,33 @@ def calculate_adjustments(
     if condition.full_service_history:
         adjustments.append(PriceAdjustment(
             category="Condição",
-            item="Revisões em dia",
+            item="Revisões pela agenda do carro",
             percentage=2.0,
             value=round(base_price * 2.0 / 100, 2),
+        ))
+
+    if condition.dealer_service_history:
+        adjustments.append(PriceAdjustment(
+            category="Condição",
+            item="Revisões pela concessionária",
+            percentage=2.5,
+            value=round(base_price * 2.5 / 100, 2),
+        ))
+
+    if condition.ipva_paid:
+        adjustments.append(PriceAdjustment(
+            category="Condição",
+            item="IPVA pago",
+            percentage=1.0,
+            value=round(base_price * 1.0 / 100, 2),
+        ))
+
+    if condition.factory_warranty:
+        adjustments.append(PriceAdjustment(
+            category="Condição",
+            item="Garantia de fábrica",
+            percentage=3.0,
+            value=round(base_price * 3.0 / 100, 2),
         ))
 
     if condition.original_paint:
